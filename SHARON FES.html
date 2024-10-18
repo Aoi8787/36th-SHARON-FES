@@ -11,6 +11,10 @@
             text-align: center;
             margin: 0;
             padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
         h1 {
             font-size: 1.8em;
@@ -24,28 +28,12 @@
             height: auto;
             aspect-ratio: 9 / 16; /* アスペクト比16:9を保つ */
         }
-        #frame img {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-        #user-image {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            max-width: 90%;
-            max-height: 90%;
-            z-index: 0;
-        }
         input {
             margin-top: 20px;
         }
         canvas {
-            display: none;
+            margin-top: 20px;
+            border: 1px solid #000;
         }
         .download-link {
             display: inline-block;
@@ -59,77 +47,63 @@
     </style>
 </head>
 <body>
-    <h1>36th シャロン祭フォトフレーム！</h1>
+    <div>
+        <h1>36th シャロン祭フォトフレーム！</h1>
 
-    <!-- フレームとユーザー画像の表示 -->
-    <div id="frame">
-        <img src="シャロン祭フレーム.png" alt="シャロン祭フレーム">
-        <img id="user-image" src="#" alt="Your Image">
+        <!-- 写真アップロード -->
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+
+        <!-- 出力キャンバス -->
+        <canvas id="output-canvas"></canvas>
+
+        <!-- ダウンロードボタン -->
+        <a id="download-link" href="#" class="download-link">Download Image</a>
     </div>
-
-    <!-- 写真アップロード -->
-    <input type="file" accept="image/*" onchange="loadImage(event)">
-
-    <!-- 出力キャンバス -->
-    <canvas id="output-canvas"></canvas>
-
-    <!-- ダウンロードボタン -->
-    <a id="download-link" href="#" class="download-link">Download Image</a>
 
     <script>
         function loadImage(event) {
-            const userImage = document.getElementById('user-image');
             const file = event.target.files[0];
             const reader = new FileReader();
 
             reader.onload = function() {
-                userImage.src = reader.result;
-                drawImageOnCanvas(reader.result);
+                const userImageSrc = reader.result;
+                drawImageOnCanvas(userImageSrc);
             };
 
             reader.readAsDataURL(file);
         }
 
-        function drawImageOnCanvas(imageSrc) {
+        function drawImageOnCanvas(userImageSrc) {
             const canvas = document.getElementById('output-canvas');
             const context = canvas.getContext('2d');
             const frameImage = new Image();
             const userImage = new Image();
 
             // キャンバスサイズをデバイスに合わせて設定
-            const frameDiv = document.getElementById('frame');
-            canvas.width = frameDiv.offsetWidth;
-            canvas.height = frameDiv.offsetHeight;
+            const frameWidth = 360; // フレーム画像の幅に合わせる（必要に応じて調整）
+            const frameHeight = 640; // フレーム画像の高さに合わせる（必要に応じて調整）
 
-            userImage.src = imageSrc;
-            frameImage.src = 'シャロン祭フレーム.png';
+            canvas.width = frameWidth;
+            canvas.height = frameHeight;
+
+            // フレーム画像のロード
+            frameImage.src = 'images/シャロン祭フレーム.png'; // フレーム画像のパスを指定
+
+            // ユーザー画像のロード
+            userImage.src = userImageSrc;
 
             // ユーザー画像をキャンバスに描画
             userImage.onload = function() {
-                // キャンバスをクリア
                 context.clearRect(0, 0, canvas.width, canvas.height);
 
-                // 画像のアスペクト比に合わせてスケールを調整
-                let userImageWidth = userImage.width;
-                let userImageHeight = userImage.height;
-                let canvasAspectRatio = canvas.width / canvas.height;
-                let userImageAspectRatio = userImageWidth / userImageHeight;
+                // ユーザー画像をキャンバスに描画（サイズ調整も行う）
+                context.drawImage(userImage, 0, 0, canvas.width, canvas.height);
 
-                let drawWidth, drawHeight;
-                if (userImageAspectRatio > canvasAspectRatio) {
-                    drawWidth = canvas.width;
-                    drawHeight = canvas.width / userImageAspectRatio;
-                } else {
-                    drawHeight = canvas.height;
-                    drawWidth = canvas.height * userImageAspectRatio;
-                }
-
-                // キャンバスにユーザー画像を中央に描画
-                context.drawImage(userImage, (canvas.width - drawWidth) / 2, (canvas.height - drawHeight) / 2, drawWidth, drawHeight);
-
-                // フレーム画像が読み込まれたら描画
+                // フレーム画像が読み込まれたら上に描画
                 frameImage.onload = function() {
                     context.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
+
+                    // ダウンロードリンクの設定
                     const downloadLink = document.getElementById('download-link');
                     downloadLink.href = canvas.toDataURL('image/png');
                     downloadLink.download = 'sharon_fes_image.png';
