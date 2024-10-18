@@ -86,7 +86,8 @@
         </div>
 
         <input type="file" @change="handleFileSelect" accept="image/*">
-        <textarea v-model="text" placeholder="画像に追加するテキストを入力してください" style="display:block; margin:10px auto; width:80%;"></textarea>
+        <p>スマートフォンで撮った写真を選んでください</p>
+
         <button @click="drawCanvas">画像を生成</button>
 
         <div class="img-container">
@@ -104,8 +105,7 @@
         data: {
           imageSrc: '',
           backgroundImg: null,
-          frameImageSrc: 'images/シャロン祭フレーム.png',  // フレーム画像パス
-          text: '' // 入力テキスト
+          frameImageSrc: 'images/シャロン祭フレーム.png'  // フレーム画像パス
         },
         methods: {
           handleFileSelect(event) {
@@ -157,21 +157,6 @@
               frameImage.onload = () => {
                 context.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
                 
-                // テキストを描画（QRコード上部付近に配置）
-                context.font = '16px Arial';
-                context.fillStyle = 'black';
-                context.textAlign = 'center';
-                
-                // テキストの位置設定 (QRコード上部付近)
-                const textX = canvas.width / 2;
-                const textY = canvas.height - 200;
-                
-                // テキストを複数行に分けて描画
-                const lines = this.text.split('\n');
-                lines.forEach((line, index) => {
-                  context.fillText(line, textX, textY + index * 20); // 20px間隔で改行
-                });
-
                 // キャンバスから画像URLを取得し、imgタグに表示
                 this.imageSrc = canvas.toDataURL('image/jpeg');
               };
