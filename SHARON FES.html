@@ -39,7 +39,7 @@
             border: 1px solid #000;
             max-width: 100%; /* スマートフォンでも最大幅に対応 */
         }
-        .download-link {
+        .generate-button {
             display: inline-block;
             margin-top: 20px;
             padding: 10px 20px;
@@ -47,6 +47,7 @@
             color: white;
             text-decoration: none;
             border-radius: 5px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -55,30 +56,40 @@
         <h1>36th シャロン祭フォト！</h1>
 
         <!-- 写真アップロード -->
-        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <input type="file" accept="image/*" id="file-input">
+        
+        <!-- 画像生成ボタン -->
+        <button class="generate-button" onclick="generateImage()">画像を生成</button>
 
         <!-- 出力用画像 -->
         <img id="output-image" src="#" alt="Generated Image">
 
-        <!-- ダウンロードボタン -->
-        <a id="download-link" href="#" class="download-link">Download Image</a>
+        <canvas id="canvas" style="display:none"></canvas>
     </div>
 
     <script>
-        function loadImage(event) {
+        let userImageSrc = null;
+
+        // ファイルが選択された際に画像を読み込む
+        document.getElementById('file-input').addEventListener('change', function(event) {
             const file = event.target.files[0];
             const reader = new FileReader();
 
             reader.onload = function() {
-                const userImageSrc = reader.result;
-                drawImageOnCanvas(userImageSrc);
+                userImageSrc = reader.result;
             };
 
             reader.readAsDataURL(file);
-        }
+        });
 
-        function drawImageOnCanvas(userImageSrc) {
-            const canvas = document.createElement('canvas');
+        // 画像を生成して表示する関数
+        function generateImage() {
+            if (!userImageSrc) {
+                alert("まずは画像を選択してください！");
+                return;
+            }
+
+            const canvas = document.getElementById('canvas');
             const context = canvas.getContext('2d');
             const frameImage = new Image();
             const userImage = new Image();
@@ -90,13 +101,12 @@
             canvas.width = frameWidth;
             canvas.height = frameHeight;
 
-            // フレーム画像のロード
-            frameImage.src = 'images/シャロン祭フレーム.png'; // フレーム画像のパスを指定
+            // フレーム画像のパスを指定
+            frameImage.src = 'images/シャロン祭フレーム.png';
 
             // ユーザー画像のロード
             userImage.src = userImageSrc;
 
-            // ユーザー画像をキャンバスに描画
             userImage.onload = function() {
                 context.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -105,7 +115,7 @@
                 const canvasAspect = canvas.width / canvas.height;
 
                 let drawWidth, drawHeight, offsetX, offsetY;
-                
+
                 if (userImageAspect > canvasAspect) {
                     // 横長画像の場合
                     drawHeight = canvas.height;
@@ -126,20 +136,11 @@
                 frameImage.onload = function() {
                     context.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
 
-                    // 画像を出力
+                    // 生成された画像を出力
                     const outputImage = document.getElementById('output-image');
                     outputImage.src = canvas.toDataURL('image/png');
-
-                    // ダウンロードリンクの設定
-                    const downloadLink = document.getElementById('download-link');
-                    downloadLink.href = canvas.toDataURL('image/png');
-                    downloadLink.download = 'sharon_fes_image.png';
+                    outputImage.style.display = 'block';  // 表示
                 };
-            };
-
-            // フレーム画像が複数回目でも再描画できるようにロード
-            frameImage.onload = function() {
-                context.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
             };
         }
     </script>
