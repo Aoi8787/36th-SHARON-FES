@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>36th SHARON FES Image Generator</title>
+    <title>36th SHARON FES PGサークルフォトサイト</title>
     <style>
         body {
             background-color: #e0e0e0;
@@ -32,8 +32,12 @@
             margin-top: 20px;
         }
         canvas {
+            display: none; /* キャンバスを非表示にする */
+        }
+        img#output-image {
             margin-top: 20px;
             border: 1px solid #000;
+            max-width: 100%; /* スマートフォンでも最大幅に対応 */
         }
         .download-link {
             display: inline-block;
@@ -48,13 +52,13 @@
 </head>
 <body>
     <div>
-        <h1>36th シャロン祭フォトフレーム！</h1>
+        <h1>36th シャロン祭フォト！</h1>
 
         <!-- 写真アップロード -->
         <input type="file" accept="image/*" onchange="loadImage(event)">
 
-        <!-- 出力キャンバス -->
-        <canvas id="output-canvas"></canvas>
+        <!-- 出力用画像 -->
+        <img id="output-image" src="#" alt="Generated Image">
 
         <!-- ダウンロードボタン -->
         <a id="download-link" href="#" class="download-link">Download Image</a>
@@ -74,14 +78,14 @@
         }
 
         function drawImageOnCanvas(userImageSrc) {
-            const canvas = document.getElementById('output-canvas');
+            const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             const frameImage = new Image();
             const userImage = new Image();
 
-            // キャンバスサイズをデバイスに合わせて設定
-            const frameWidth = 360; // フレーム画像の幅に合わせる（必要に応じて調整）
-            const frameHeight = 640; // フレーム画像の高さに合わせる（必要に応じて調整）
+            // キャンバスサイズを固定サイズに設定（例：スマホでの2316×3088対応）
+            const frameWidth = 2316;
+            const frameHeight = 3088;
 
             canvas.width = frameWidth;
             canvas.height = frameHeight;
@@ -96,12 +100,35 @@
             userImage.onload = function() {
                 context.clearRect(0, 0, canvas.width, canvas.height);
 
-                // ユーザー画像をキャンバスに描画（サイズ調整も行う）
-                context.drawImage(userImage, 0, 0, canvas.width, canvas.height);
+                // ユーザー画像をキャンバスに描画（サイズ調整とトリミングを行う）
+                const userImageAspect = userImage.width / userImage.height;
+                const canvasAspect = canvas.width / canvas.height;
+
+                let drawWidth, drawHeight, offsetX, offsetY;
+                
+                if (userImageAspect > canvasAspect) {
+                    // 横長画像の場合
+                    drawHeight = canvas.height;
+                    drawWidth = userImage.width * (canvas.height / userImage.height);
+                    offsetX = (canvas.width - drawWidth) / 2;
+                    offsetY = 0;
+                } else {
+                    // 縦長画像の場合
+                    drawWidth = canvas.width;
+                    drawHeight = userImage.height * (canvas.width / userImage.width);
+                    offsetX = 0;
+                    offsetY = (canvas.height - drawHeight) / 2;
+                }
+
+                context.drawImage(userImage, offsetX, offsetY, drawWidth, drawHeight);
 
                 // フレーム画像が読み込まれたら上に描画
                 frameImage.onload = function() {
                     context.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
+
+                    // 画像を出力
+                    const outputImage = document.getElementById('output-image');
+                    outputImage.src = canvas.toDataURL('image/png');
 
                     // ダウンロードリンクの設定
                     const downloadLink = document.getElementById('download-link');
