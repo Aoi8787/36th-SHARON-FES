@@ -63,11 +63,13 @@
             margin-top: 20px;
             max-width: 100%;
             height: auto;
+            display: none; /* キャンバスは非表示にして結果画像のみ表示する */
         }
 
-        .img-container {
+        img {
             margin-top: 20px;
-            position: relative;
+            max-width: 100%;
+            height: auto;
         }
 
         .download-info {
@@ -90,6 +92,7 @@
 
         <div class="img-container">
             <canvas id="canvas" width="720" height="1280"></canvas> <!-- 16:9 ratio -->
+            <img :src="imageSrc" alt="生成された画像" v-if="imageSrc"> <!-- 生成された画像を表示 -->
         </div>
 
         <p class="download-info">長押しで画像を保存してください</p>
@@ -154,11 +157,8 @@
               frameImage.onload = () => {
                 context.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
                 
-                // キャンバスから画像URLを取得し、保存リンクを動的に生成
-                const link = document.createElement('a');
-                link.href = canvas.toDataURL('image/png');
-                link.download = 'sharon_fes_image.png';
-                link.click(); // 自動でリンクをクリックし、ダウンロードをトリガー
+                // キャンバスから画像URLを取得し、imgタグに表示
+                this.imageSrc = canvas.toDataURL('image/jpeg');
               };
             };
           }
