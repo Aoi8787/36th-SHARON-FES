@@ -83,7 +83,7 @@
             const frameImage = new Image();
             const userImage = new Image();
 
-            // キャンバスサイズを固定サイズに設定（例：スマホでの2316×3088対応）
+            // キャンバスサイズを固定サイズに設定（2316×3088に対応）
             const frameWidth = 2316;
             const frameHeight = 3088;
 
@@ -135,6 +135,11 @@
                     downloadLink.href = canvas.toDataURL('image/png');
                     downloadLink.download = 'sharon_fes_image.png';
                 };
+            };
+
+            // フレーム画像が複数回目でも再描画できるようにロード
+            frameImage.onload = function() {
+                context.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
             };
         }
     </script>
