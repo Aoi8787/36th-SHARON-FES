@@ -6,40 +6,41 @@
     <title>36th SHARON FES PGサークルフォトサイト</title>
     <style>
         body {
-            background-color: #e0e0e0;
+            background-color: #e0e0e0; /* 背景色をグレーに変更 */
             font-family: "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro", "メイリオ", Meiryo, sans-serif;
-            text-align: center;
-            margin: 0;
-            padding: 0;
+        }
+
+        .h1-container {
             display: flex;
-            justify-content: center;
             align-items: center;
-            height: 100vh;
+            justify-content: center;
+            margin-top: 20px;
         }
+
         h1 {
-            font-size: 1.8em;
-            margin: 20px 0;
-        }
-        #frame {
-            position: relative;
             display: inline-block;
-            width: 90vw; /* 画面幅の90% */
-            max-width: 360px; /* 最大幅を指定 */
+            margin: 1.5em 15px 1.5em 0;
+            padding: 7px 10px;
+            color: #555;
+            font-size: 2.5em;
+            background: #FFF;
+            border: solid 3px #555;
+            border-radius: 20px;
+        }
+
+        .app {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .img-canvas {
+            border: 1px solid black;
+            margin-top: 20px;
+            max-width: 100%;
             height: auto;
-            aspect-ratio: 9 / 16; /* アスペクト比16:9を保つ */
         }
-        input {
-            margin-top: 20px;
-        }
-        canvas {
-            display: none; /* キャンバスを非表示にする */
-        }
-        img#output-image {
-            margin-top: 20px;
-            border: 1px solid #000;
-            max-width: 100%; /* スマートフォンでも最大幅に対応 */
-        }
-        .generate-button {
+
+        .download-link {
             display: inline-block;
             margin-top: 20px;
             padding: 10px 20px;
@@ -47,103 +48,92 @@
             color: white;
             text-decoration: none;
             border-radius: 5px;
+        }
+
+        .download-link:hover {
+            background-color: #45a049;
+        }
+
+        input[type="file"] {
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
             cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #1976D2;
         }
     </style>
 </head>
 <body>
-    <div>
-        <h1>36th シャロン祭フォト！</h1>
+    <div id="app" class="app">
+        <div class="h1-container">
+            <h1>36th SHARON FES PGサークルフォトサイト</h1>
+        </div>
 
-        <!-- 写真アップロード -->
-        <input type="file" accept="image/*" id="file-input">
-        
-        <!-- 画像生成ボタン -->
-        <button class="generate-button" onclick="generateImage()">画像を生成</button>
+        <input type="file" @change="handleFileSelect" accept="image/*">
+        <p>スマートフォンで撮った写真を選んでください</p>
 
-        <!-- 出力用画像 -->
-        <img id="output-image" src="#" alt="Generated Image">
+        <button @click="drawCanvas">画像を生成</button>
 
-        <canvas id="canvas" style="display:none"></canvas>
+        <canvas id="canvas" class="img-canvas" width="500" height="500"></canvas>
+
+        <a :href="imageSrc" download="sharon_fes_photo.jpg" class="download-link" v-if="imageSrc">画像をダウンロード</a>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
     <script>
-        let userImageSrc = null;
-
-        // ファイルが選択された際に画像を読み込む
-        document.getElementById('file-input').addEventListener('change', function(event) {
+      new Vue({
+        el: '#app',
+        data: {
+          imageSrc: '',
+          backgroundImg: null,
+          frameImageSrc: 'images/シャロン祭フレーム.png'  // Use the uploaded frame
+        },
+        methods: {
+          handleFileSelect(event) {
             const file = event.target.files[0];
+            this.loadImage(file);
+          },
+          loadImage(file) {
             const reader = new FileReader();
-
-            reader.onload = function() {
-                userImageSrc = reader.result;
+            reader.onload = (e) => {
+              this.backgroundImg = e.target.result;
             };
-
             reader.readAsDataURL(file);
-        });
-
-        // 画像を生成して表示する関数
-        function generateImage() {
-            if (!userImageSrc) {
-                alert("まずは画像を選択してください！");
-                return;
-            }
-
+          },
+          drawCanvas() {
             const canvas = document.getElementById('canvas');
             const context = canvas.getContext('2d');
             const frameImage = new Image();
-            const userImage = new Image();
+            const backgroundImage = new Image();
 
-            // キャンバスサイズを固定サイズに設定（2316×3088に対応）
-            const frameWidth = 2316;
-            const frameHeight = 3088;
+            frameImage.src = this.frameImageSrc;
+            backgroundImage.src = this.backgroundImg;
 
-            canvas.width = frameWidth;
-            canvas.height = frameHeight;
+            backgroundImage.onload = () => {
+              // Draw user image first
+              context.clearRect(0, 0, canvas.width, canvas.height);
+              context.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
 
-            // フレーム画像のパスを指定
-            frameImage.src = 'images/シャロン祭フレーム.png';
-
-            // ユーザー画像のロード
-            userImage.src = userImageSrc;
-
-            userImage.onload = function() {
-                // キャンバスをクリア（毎回新しい画像を生成）
-                context.clearRect(0, 0, canvas.width, canvas.height);
-
-                // ユーザー画像をキャンバスに描画（サイズ調整とトリミングを行う）
-                const userImageAspect = userImage.width / userImage.height;
-                const canvasAspect = canvas.width / canvas.height;
-
-                let drawWidth, drawHeight, offsetX, offsetY;
-
-                if (userImageAspect > canvasAspect) {
-                    // 横長画像の場合
-                    drawHeight = canvas.height;
-                    drawWidth = userImage.width * (canvas.height / userImage.height);
-                    offsetX = (canvas.width - drawWidth) / 2;
-                    offsetY = 0;
-                } else {
-                    // 縦長画像の場合
-                    drawWidth = canvas.width;
-                    drawHeight = userImage.height * (canvas.width / userImage.width);
-                    offsetX = 0;
-                    offsetY = (canvas.height - drawHeight) / 2;
-                }
-
-                context.drawImage(userImage, offsetX, offsetY, drawWidth, drawHeight);
-
-                // フレーム画像が読み込まれたら上に描画
-                frameImage.onload = function() {
-                    context.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
-
-                    // 生成された画像を出力
-                    const outputImage = document.getElementById('output-image');
-                    outputImage.src = canvas.toDataURL('image/png');
-                    outputImage.style.display = 'block';  // 表示
-                };
+              // Draw frame on top
+              frameImage.onload = () => {
+                context.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
+                this.imageSrc = canvas.toDataURL('image/jpeg');
+              };
             };
+          }
         }
+      });
     </script>
 </body>
 </html>
