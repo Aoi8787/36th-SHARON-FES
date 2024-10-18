@@ -6,7 +6,7 @@
     <title>36th SHARON FES PGサークルフォトサイト</title>
     <style>
         body {
-            background-color: #e0e0e0; /* 背景色をグレーに変更 */
+            background-color: #e0e0e0;
             font-family: "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro", "メイリオ", Meiryo, sans-serif;
             margin: 0;
             padding: 0;
@@ -102,7 +102,7 @@
         data: {
           imageSrc: '',
           backgroundImg: null,
-          frameImageSrc: 'images/シャロン祭フレーム.png'  // アップロードされたフレーム画像を使用
+          frameImageSrc: 'images/シャロン祭フレーム.png'  // フレーム画像パス
         },
         methods: {
           handleFileSelect(event) {
@@ -119,17 +119,18 @@
           drawCanvas() {
             const canvas = document.getElementById('canvas');
             const context = canvas.getContext('2d');
+            
+            // 毎回新しい Image オブジェクトを作成する
             const frameImage = new Image();
             const backgroundImage = new Image();
-
+            
             frameImage.src = this.frameImageSrc;
             backgroundImage.src = this.backgroundImg;
 
             backgroundImage.onload = () => {
-              // 背景画像（ユーザーが選んだ画像）を描画
+              // 背景画像を描画
               context.clearRect(0, 0, canvas.width, canvas.height);
               
-              // アスペクト比に応じた画像のスケーリング
               const bgWidth = canvas.width;
               const bgHeight = canvas.height;
               const imgAspectRatio = backgroundImage.width / backgroundImage.height;
@@ -149,9 +150,15 @@
 
               context.drawImage(backgroundImage, x, y, drawWidth, drawHeight);
 
-              // フレーム画像を上に描画
+              // フレーム画像を描画
               frameImage.onload = () => {
                 context.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
+                
+                // キャンバスから画像URLを取得し、保存リンクを動的に生成
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = 'sharon_fes_image.png';
+                link.click(); // 自動でリンクをクリックし、ダウンロードをトリガー
               };
             };
           }
