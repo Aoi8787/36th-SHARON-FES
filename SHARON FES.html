@@ -8,164 +8,117 @@
         body {
             background-color: #e0e0e0;
             font-family: "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro", "メイリオ", Meiryo, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
-
-        .h1-container {
             text-align: center;
-            margin-top: 10px;
+            padding: 20px;
         }
-
         h1 {
-            display: inline-block;
-            padding: 10px 20px;
             color: #555;
-            font-size: 1.5em;
+            font-size: 2em;
             background: #FFF;
             border: solid 3px #555;
             border-radius: 15px;
+            display: inline-block;
+            padding: 10px 20px;
         }
-
-        .app {
-            text-align: center;
-            margin-top: 10px;
-            width: 100%;
-        }
-
         input[type="file"] {
-            display: block;
-            margin: 20px auto;
-            font-size: 16px;
+            margin-top: 20px;
         }
-
         button {
-            padding: 12px 25px;
-            font-size: 16px;
+            padding: 10px 20px;
+            margin-top: 10px;
             background-color: #2196F3;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            margin-top: 10px;
         }
-
         button:hover {
             background-color: #1976D2;
         }
-
         canvas {
             margin-top: 20px;
-            max-width: 100%;
-            height: auto;
-            display: none;
+            border: 1px solid #555;
         }
-
         img {
             margin-top: 20px;
             max-width: 100%;
-            height: auto;
-        }
-
-        .download-info {
-            font-size: 14px;
-            color: #333;
-            margin-top: 15px;
         }
     </style>
 </head>
 <body>
-    <div id="app" class="app">
-        <div class="h1-container">
-            <h1>36th SHARON FES PGサークルフォトサイト</h1>
-        </div>
+    <h1>36th SHARON FES PGサークルフォトサイト</h1>
 
-        <input type="file" @change="handleFileSelect" accept="image/*">
-        <p>スマートフォンで撮った写真を選んでください</p>
+    <input type="file" @change="handleFileSelect" accept="image/*">
+    <button @click="drawCanvas">画像を生成</button>
 
-        <button @click="drawCanvas">画像を生成</button>
+    <canvas id="canvas" width="720" height="1280"></canvas> <!-- 16:9 ratio -->
+    <img :src="imageSrc" v-if="imageSrc" alt="生成された画像">
 
-        <div class="img-container">
-            <canvas id="canvas" width="720" height="1280"></canvas> <!-- 16:9 ratio -->
-            <img :src="imageSrc" alt="生成された画像" v-if="imageSrc"> <!-- 生成された画像を表示 -->
-        </div>
-
-        <!-- ダウンロードリンク部分を下に移動 -->
-        <p class="download-info">長押しで画像を保存してください</p>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
     <script>
-      new Vue({
-        el: '#app',
-        data: {
-          imageSrc: '',
-          backgroundImg: null,
-          frameImageSrc: 'images/シャロン祭フレーム.png'  // テンプレート画像のパスを指定
-        },
-        methods: {
-          handleFileSelect(event) {
-            const file = event.target.files[0];
-            this.loadImage(file);
-          },
-          loadImage(file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              this.backgroundImg = e.target.result;
-            };
-            reader.readAsDataURL(file);
-          },
-          drawCanvas() {
-            const canvas = document.getElementById('canvas');
-            const context = canvas.getContext('2d');
-            
-            // テンプレートフレーム画像とアップロードされた背景画像を新規に作成
-            const frameImage = new Image();
-            const backgroundImage = new Image();
-            
-            frameImage.src = this.frameImageSrc;
-            backgroundImage.src = this.backgroundImg;
+        new Vue({
+            el: 'body',
+            data: {
+                imageSrc: '', // 生成された画像のデータURL
+                backgroundImg: null, // アップロードされた画像
+                frameImageSrc: 'images/シャロン祭フレーム.png' // フレーム画像のパス
+            },
+            methods: {
+                handleFileSelect(event) {
+                    const file = event.target.files[0];
+                    this.loadImage(file);
+                },
+                loadImage(file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        this.backgroundImg = e.target.result; // 背景画像のデータURLをセット
+                    };
+                    reader.readAsDataURL(file);
+                },
+                drawCanvas() {
+                    const canvas = document.getElementById('canvas');
+                    const context = canvas.getContext('2d');
 
-            backgroundImage.onload = () => {
-              // 背景画像をキャンバスに描画
-              context.clearRect(0, 0, canvas.width, canvas.height);
-              
-              // 背景画像の比率を保持しつつ、キャンバス全体に表示する
-              const bgWidth = canvas.width;
-              const bgHeight = canvas.height;
-              const imgAspectRatio = backgroundImage.width / backgroundImage.height;
-              const canvasAspectRatio = bgWidth / bgHeight;
+                    // フレーム画像の読み込み
+                    const frameImage = new Image();
+                    frameImage.src = this.frameImageSrc;
 
-              let drawWidth, drawHeight;
-              if (imgAspectRatio > canvasAspectRatio) {
-                drawWidth = bgWidth;
-                drawHeight = bgWidth / imgAspectRatio;
-              } else {
-                drawHeight = bgHeight;
-                drawWidth = bgHeight * imgAspectRatio;
-              }
+                    // 背景画像（アップロードされた画像）の読み込み
+                    const backgroundImage = new Image();
+                    backgroundImage.src = this.backgroundImg;
 
-              const x = (bgWidth - drawWidth) / 2;
-              const y = (bgHeight - drawHeight) / 2;
+                    // 背景画像が読み込まれた後に描画処理を行う
+                    backgroundImage.onload = () => {
+                        context.clearRect(0, 0, canvas.width, canvas.height);
 
-              context.drawImage(backgroundImage, x, y, drawWidth, drawHeight);
+                        // 背景画像をキャンバスに描画
+                        const imgAspectRatio = backgroundImage.width / backgroundImage.height;
+                        const canvasAspectRatio = canvas.width / canvas.height;
+                        let drawWidth, drawHeight;
+                        
+                        if (imgAspectRatio > canvasAspectRatio) {
+                            drawWidth = canvas.width;
+                            drawHeight = canvas.width / imgAspectRatio;
+                        } else {
+                            drawHeight = canvas.height;
+                            drawWidth = canvas.height * imgAspectRatio;
+                        }
 
-              // テンプレートフレーム画像をキャンバスに描画
-              frameImage.onload = () => {
-                context.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
-                
-                // キャンバスから生成された画像URLを取得し、imgタグで表示
-                this.imageSrc = canvas.toDataURL('image/jpeg');
-              };
-            };
-          }
-        }
-      });
+                        const x = (canvas.width - drawWidth) / 2;
+                        const y = (canvas.height - drawHeight) / 2;
+                        context.drawImage(backgroundImage, x, y, drawWidth, drawHeight);
+
+                        // フレーム画像が読み込まれた後に描画
+                        frameImage.onload = () => {
+                            context.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
+
+                            // キャンバスの内容を画像として表示
+                            this.imageSrc = canvas.toDataURL('image/jpeg');
+                        };
+                    };
+                }
+            }
+        });
     </script>
 </body>
 </html>
