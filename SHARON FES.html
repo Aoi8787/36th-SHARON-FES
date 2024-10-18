@@ -108,6 +108,7 @@
             userImage.src = userImageSrc;
 
             userImage.onload = function() {
+                // キャンバスをクリア
                 context.clearRect(0, 0, canvas.width, canvas.height);
 
                 // ユーザー画像をキャンバスに描画（サイズ調整とトリミングを行う）
