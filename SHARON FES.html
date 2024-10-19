@@ -85,17 +85,20 @@
             <h1>36th SHARON FES <br>PGサークルフォトサイト<br></h1>
         </div>
 
+        <!-- 画像をアップロードすると即座に表示される -->
         <input type="file" @change="handleFileSelect" accept="image/*">
         <p>スマートフォンで撮った写真を選んでください<br>開発中なので一枚しか生成できません…🙇<br></p>
 
-        <button @click="drawCanvas">画像を生成</button>
+        <!-- 画像が選択されたらプレビュー表示 -->
+        <img :src="previewSrc" alt="アップロード画像" v-if="previewSrc">
+
+        <button @click="drawCanvas" :disabled="!backgroundImg">画像を生成</button>
 
         <div class="img-container">
             <canvas id="canvas" width="720" height="1280"></canvas> <!-- 16:9 ratio -->
             <img :src="imageSrc" alt="生成された画像" v-if="imageSrc"> <!-- 生成された画像を表示 -->
         </div>
 
-        <!-- ダウンロードリンク部分を下に移動 -->
         <p class="download-info">長押しで画像を保存してください</p>
     </div>
 
@@ -104,9 +107,10 @@
       new Vue({
         el: '#app',
         data: {
-          imageSrc: '',
-          backgroundImg: null,
-          frameImageSrc: 'images/シャロン祭フレーム.png'  // テンプレート画像のパスを指定
+          previewSrc: '',  // アップロードした画像のプレビュー用
+          imageSrc: '',    // 生成された画像
+          backgroundImg: null,  // アップロードされた画像データ
+          frameImageSrc: 'images/シャロン祭フレーム.png'  // フレーム画像
         },
         methods: {
           handleFileSelect(event) {
@@ -116,7 +120,8 @@
           loadImage(file) {
             const reader = new FileReader();
             reader.onload = (e) => {
-              this.backgroundImg = e.target.result;
+              this.previewSrc = e.target.result;  // アップロード画像をプレビューに表示
+              this.backgroundImg = e.target.result;  // アップロードされた画像データを保持
             };
             reader.readAsDataURL(file);
           },
@@ -124,7 +129,6 @@
             const canvas = document.getElementById('canvas');
             const context = canvas.getContext('2d');
             
-            // テンプレートフレーム画像とアップロードされた背景画像を新規に作成
             const frameImage = new Image();
             const backgroundImage = new Image();
             
@@ -134,8 +138,7 @@
             backgroundImage.onload = () => {
               // 背景画像をキャンバスに描画
               context.clearRect(0, 0, canvas.width, canvas.height);
-              
-              // 背景画像の比率を保持しつつ、キャンバス全体に表示する
+
               const bgWidth = canvas.width;
               const bgHeight = canvas.height;
               const imgAspectRatio = backgroundImage.width / backgroundImage.height;
@@ -155,11 +158,11 @@
 
               context.drawImage(backgroundImage, x, y, drawWidth, drawHeight);
 
-              // テンプレートフレーム画像をキャンバスに描画
+              // フレーム画像を上に描画
               frameImage.onload = () => {
                 context.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
-                
-                // キャンバスから生成された画像URLを取得し、imgタグで表示
+
+                // キャンバスの画像URLを取得し、imgタグで表示
                 this.imageSrc = canvas.toDataURL('image/jpeg');
               };
             };
