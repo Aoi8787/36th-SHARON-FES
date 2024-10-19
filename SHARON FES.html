@@ -87,7 +87,7 @@
 
         <!-- アップロード画像を選択するとすぐに表示 -->
         <input type="file" @change="handleFileSelect" accept="image/*">
-        <p>スマートフォンで撮った写真を選んでください<br>開発中なので一枚しか生成できません…🙇<br></p>
+        <p>写真を撮影または選択してください</p>
 
         <!-- アップロード画像のプレビュー表示 -->
         <img :src="previewSrc" alt="アップロード画像" v-if="previewSrc">
