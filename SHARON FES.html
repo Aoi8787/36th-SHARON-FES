@@ -85,16 +85,18 @@
             <h1>36th SHARON FES <br>PGサークルフォトサイト<br></h1>
         </div>
 
-        <!-- 画像をアップロードすると即座に表示される -->
+        <!-- アップロード画像を選択するとすぐに表示 -->
         <input type="file" @change="handleFileSelect" accept="image/*">
         <p>スマートフォンで撮った写真を選んでください<br>開発中なので一枚しか生成できません…🙇<br></p>
 
-        <!-- 画像が選択されたらプレビュー表示 -->
+        <!-- アップロード画像のプレビュー表示 -->
         <img :src="previewSrc" alt="アップロード画像" v-if="previewSrc">
 
+        <!-- 画像生成ボタン -->
         <button @click="drawCanvas" :disabled="!backgroundImg">画像を生成</button>
 
         <div class="img-container">
+            <!-- フレームが追加された画像を表示 -->
             <canvas id="canvas" width="720" height="1280"></canvas> <!-- 16:9 ratio -->
             <img :src="imageSrc" alt="生成された画像" v-if="imageSrc"> <!-- 生成された画像を表示 -->
         </div>
@@ -126,6 +128,8 @@
             reader.readAsDataURL(file);
           },
           drawCanvas() {
+            if (!this.backgroundImg) return;  // 背景画像がなければ処理をしない
+
             const canvas = document.getElementById('canvas');
             const context = canvas.getContext('2d');
             
@@ -135,8 +139,8 @@
             frameImage.src = this.frameImageSrc;
             backgroundImage.src = this.backgroundImg;
 
+            // 背景画像が読み込まれた後に描画
             backgroundImage.onload = () => {
-              // 背景画像をキャンバスに描画
               context.clearRect(0, 0, canvas.width, canvas.height);
 
               const bgWidth = canvas.width;
@@ -156,13 +160,14 @@
               const x = (bgWidth - drawWidth) / 2;
               const y = (bgHeight - drawHeight) / 2;
 
+              // 背景画像をキャンバスに描画
               context.drawImage(backgroundImage, x, y, drawWidth, drawHeight);
 
-              // フレーム画像を上に描画
+              // フレーム画像が読み込まれた後に描画
               frameImage.onload = () => {
                 context.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
 
-                // キャンバスの画像URLを取得し、imgタグで表示
+                // キャンバスから生成された画像URLを取得し、imgタグで表示
                 this.imageSrc = canvas.toDataURL('image/jpeg');
               };
             };
